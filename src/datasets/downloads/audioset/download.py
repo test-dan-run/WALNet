@@ -1,11 +1,10 @@
 #Code Contributor - Ankit Shah - ankit.tronix@gmail.com
-import pafy
-import subprocess
 import os
 import sys
-from multiprocessing import Pool
-from tqdm import tqdm
 import yt_dlp
+import subprocess
+from tqdm import tqdm
+from multiprocessing import Pool
 from typing import Union, Any, List
 
 class DownloadAudioSet:
