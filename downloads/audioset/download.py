@@ -1,11 +1,12 @@
 import os
-import sys
 import json
 import yt_dlp
+import argparse
+import datetime
 import subprocess
 from tqdm import tqdm
-from multiprocessing import Pool
 from typing import Union, List
+from multiprocessing import Pool
 
 class DownloadAudioSet:
 	def __init__(
@@ -51,7 +52,7 @@ class DownloadAudioSet:
 
 		output_dir = os.path.join(self.output_dir, folder_ext)
 		os.makedirs(output_dir, exist_ok=True)
-		output_filename = f'Y{audio_id}_{start_time}_{end_time}.m4a'
+		output_filename = f'Y{audio_id}_{start_time}_{end_time}.{self.preftype}'
 
 		audio_url = self.default_url + audio_id
 		print(f'Downloading from: {audio_url}')
@@ -61,17 +62,17 @@ class DownloadAudioSet:
 			'paths': {'home': output_dir}, # set output dir
 			'download_ranges': lambda x, y: [{'start_time': start_time, 'end_time': end_time},],
 			'outtmpl': {'default': output_filename},
-			'format': 'm4a/bestaudio/best',
+			'format': f'{self.preftype}/bestaudio/best',
 
 			'postprocessors': [{  # Extract audio using ffmpeg
 				'key': 'FFmpegExtractAudio',
-				'preferredcodec': 'm4a',
+				'preferredcodec': self.preftype,
 			}]
 		}
 
 		try:
 			with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-				error_code = ydl.download([audio_url,])
+				ydl.download([audio_url,])
 			return os.path.join(output_dir, output_filename) 
 
 		except Exception as e:
@@ -156,6 +157,35 @@ class DownloadAudioSet:
 
 
 if __name__ == '__main__':
-	# output_dir: str, csv_filepath: str, 
-	download_obj = DownloadAudioSet(output_dir=sys.argv[1], csv_filepath=sys.argv[2])
-	download_obj.download_dataset(num_threads=int(sys.argv[3]))
+
+	parser = argparse.ArgumentParser(description='Download AudioSet data')
+	parser.add_argument('output-dir', type=str, help='Output directory')
+	parser.add_argument('csv-filepath', type=str, help='Path to an AudioSet csv path')
+	parser.add_argument('--num-threads', type=int, default=1, help='Number of threads to use to simultaneously download multiple videos at once')
+	# youtube preproc
+	parser.add_argument('--default-url', type=str, default='https://www.youtube.com/watch?v=', help='Default prefix to all youtube downloads')
+	parser.add_argument('--preftype', type=str, default='m4a', help='Preferable type for youtube audo downloads')
+	# ffmpeg processing
+	parser.add_argument('--num_channels', type=int, default=1, help='Default number of audio channels to process to')
+	parser.add_argument('--sample-rate', type=int, default=44100, help='Default sample rate to process to')
+	parser.add_argument('--bit-rate', type=int, default=16, help='The bit rate of the audio file to be processed to')
+	# manifest generation
+	parser.add_argument('--create-manifest', action='store_true', help='Whether to generate manifest file')
+	parser.add_argument('--no-create-manifest', dest='create_manifest', action='store_false', help='Whether to generate manfiest file')
+	parser.set_defaults(create_manifest=True)
+	parser.add_argument('--manifest-filename', type=str, default='manifest.json', help='Filename of the manifest file')
+
+	args = parser.parse_args()
+	
+	# youtube downloads are time-sensitive (due to video removals)
+	# we append the date the files were downloaded for version tracking
+	current_date = str(datetime.datetime.now().date())
+	output_dir = f'{args.output_dir}-{current_date}'
+
+	download_obj = DownloadAudioSet(
+		output_dir=output_dir, csv_filepath=args.csv_filepath,
+		default_url=args.default_url, preftype=args.preftype,
+		num_channels=args.num_channels, sample_rate=args.sample_rate, bit_rate=args.bit_rate,
+		create_manifest=args.create_manifest, manifest_filename=args.manifest_filename
+		)
+	download_obj.download_dataset(num_threads=args.num_threads)
