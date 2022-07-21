@@ -5,7 +5,7 @@ services:
   local:
     stdin_open: true
     tty: true
-    image: slide:v1.0.0
+    image: dleongsh/torchaudio:1.8.1-cuda11.1-cudnn8-runtime
     deploy:
       resources:
         reservations:
@@ -22,7 +22,7 @@ services:
   tensorboard:
     stdin_open: true
     tty: true
-    image: slide:v1.0.0
+    image: dleongsh/torchaudio:1.8.1-cuda11.1-cudnn8-runtime
     ports:
       - 6006:6006
     volumes:

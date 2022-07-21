@@ -1,3 +1,7 @@
+# downloading data
+tqdm
+yt-dlp==2022.7.18
+
 # audio packages
 librosa==0.8.1
 torchaudio==0.8.1
@@ -10,7 +14,6 @@ hydra-core==1.1.0
 pytorch-lightning>=1.5.0,<1.6
 
 # evaluation
-tqdm
 matplotlib>=3.4.3,<3.5
 pandas>=1.3.4,<1.4
 seaborn>=0.11.2,<0.12
