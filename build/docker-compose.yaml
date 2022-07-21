@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
 
-  local:
+  train_model:
     stdin_open: true
     tty: true
     image: dleongsh/torchaudio:1.8.1-cuda11.1-cudnn8-runtime
@@ -18,7 +18,7 @@ services:
       memlock: -1
       stack: 67108864
     shm_size: 16gb
-    command: python3 local_train.py
+    command: python3 /walnet/train.py
 
   tensorboard:
     stdin_open: true
@@ -27,5 +27,5 @@ services:
     ports:
       - 6006:6006
     volumes:
-      - /mnt/c/Users/tjinghua/projects/WALNet/logs:/logs
+      - /mnt/c/projects/detection/WALNet/logs:/logs
     command: tensorboard --logdir /logs --host 0.0.0.0 --port 6006

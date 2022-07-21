@@ -13,7 +13,55 @@ This is a re-implementation of the [official WALNet repository](https://github.c
 
 - [ ] Add logging features
 - [ ] Add label corruption features
-- [ ] Documentation
+- [x] Documentation
+
+## How to Run Experiments
+
+### 1. Use docker!
+
+Build the docker image with the required dependicies in the `build` folder via this command.
+```bash
+cd build
+docker build -t dleongsh/torchaudio:1.8.1-cuda11.1-cudnn8-runtime .
+```
+
+Then, change the paths to your directories in the `docker-compose.yaml` file as you see fit.
+
+### 2. Set your configs
+First set your dataset manifest paths in the `configs/dataset/audioset.yaml` file. They should correspond to the mapped dataset volume as stated in your updated `docker-compose.yaml` file. As an example:
+
+My local dataset directory and the manifest files are found here:
+```bash
+# dataset directory
+/mnt/d/datasets/audioset-2022-07-21
+# manifest file
+/mnt/d/datasets/audioset-2022-07-21/balanced_train_segments/manifest.json
+```
+However, I mapped the dataset directory as a volume this way:
+```yaml
+volumes:
+    - /mnt/d/datasets/audioset-2022-07-21:/dataset
+```
+So, in my configs file, the path to my manifest file will be:
+```yaml
+train_manifest_path: /dataset/balanced_train_segments/manifest.json
+```
+You can also edit the configs in the other components as you see fit. Most importantly, make sure that inside `main.yaml`, your defaults are pointing to the right config for each component.
+
+### 3. Run experiment!
+```bash
+cd build
+docker-compose up
+```
+You can view your experiment logs via tensorboard as it runs here: http://localhost:6006/
+
+If you wish to see the progress bar of each epoch, I suggest running the docker container in execution mode as such:
+```bash
+docker-compose run train_model bash
+# inside the container
+cd /walnet
+python3 train.py
+```
 
 ## Reference
 ```
