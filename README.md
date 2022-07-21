@@ -12,4 +12,5 @@ This is a re-implementation of the [official WALNet repository](https://github.c
 ## TODOs
 
 - [ ] Add logging features
+- [ ] Add label corruption features
 - [ ] Documentation
