@@ -1,13 +1,11 @@
-
 from torch import Tensor
 import torch.nn as nn
-import numpy as np
-import torch.nn.functional as F
 import torch.nn.init as init
+import torch.nn.functional as F
 
 class WALNet(nn.Module):
 
-    def __init__(self, nclass: int):
+    def __init__(self, nclass: int, *args, **kwargs):
         super(WALNet,self).__init__()
 
         self.globalpool = F.avg_pool2d

@@ -1,0 +1,12 @@
+train_manifest_path: /walnet/downloads/audioset/outputs/balanced_train_segments/manifest.json
+valid_manifest_path: /walnet/downloads/audioset/outputs/eval_segments/manifest.json
+test_manifest_path: null
+
+labels_indices_path: /walnet/downloads/audioset/class_labels_indices.txt
+sample_rate: 44100
+n_fft: 1024 
+hop_length: 512
+power: 2.0
+num_mels: 128
+audio_length_sec: 10
+random_seed: 42

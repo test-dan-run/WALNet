@@ -1,2 +1,5 @@
 *.m4a
 *.wav
+
+outputs/
+logs/

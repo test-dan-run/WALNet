@@ -1,0 +1,5 @@
+defaults:
+  - dataset: audioset
+  - model: walnet_base
+  - optim: adam_decay
+  - run: 1xGPU

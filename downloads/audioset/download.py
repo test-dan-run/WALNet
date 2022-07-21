@@ -1,19 +1,23 @@
-#Code Contributor - Ankit Shah - ankit.tronix@gmail.com
 import os
 import sys
+import json
 import yt_dlp
 import subprocess
 from tqdm import tqdm
 from multiprocessing import Pool
-from typing import Union, Any, List
+from typing import Union, List
 
 class DownloadAudioSet:
 	def __init__(
-		self, output_dir: str, default_url: str = 'https://www.youtube.com/watch?v=', preftype: str = 'm4a',
-		num_channels: int = 1, sample_rate: int = 44100, bit_rate: int = 16
+		self, output_dir: str, csv_filepath: str, default_url: str = 'https://www.youtube.com/watch?v=', preftype: str = 'm4a',
+		num_channels: int = 1, sample_rate: int = 44100, bit_rate: int = 16,
+		create_manifest: bool = True, manifest_filename: str = 'manifest.json'
 		) -> None:
 
-		self.output_dir = output_dir
+		self.csv_filepath = csv_filepath
+
+		csv_filename = os.path.basename(csv_filepath)
+		self.output_dir = os.path.join(output_dir, os.path.splitext(csv_filename)[0])
 		
 		self.default_url = default_url
 		self.preftype = preftype
@@ -22,16 +26,30 @@ class DownloadAudioSet:
 		self.sample_rate = sample_rate
 		self.bit_rate = bit_rate
 
+		self.create_manifest = create_manifest
+		self.manifest_filepath = os.path.join(self.output_dir, manifest_filename)
+		if os.path.exists(self.manifest_filepath):
+			os.remove(self.manifest_filepath)
+
+	def update_manifest(self, path: str, duration: Union[int, float], labels: List[str]) -> None:
+
+		item = {
+			'audio_filepath': path,
+			'duration': duration,
+			'labels': labels,
+			}
+
+		with open(self.manifest_filepath, mode='a', encoding='utf-8') as fw:
+			fw.write(json.dumps(item)+'\n')
+
 	# Method to download best audio available for audio id
+	# Download only the required audio segments
 	def download_audio(
-		self, audio_id: str, start_time: Union[str, float, int], end_time: Union[str, float, int],
-		folder_ext: str = 'audio_downloaded',
+		self, audio_id: str, start_time: int, end_time: int,
+		folder_ext: str = 'downloaded',
 		) -> str:
 
-		start_time = int(float(start_time))
-		end_time = int(float(end_time))
-
-		output_dir = self.output_dir + '_' + folder_ext
+		output_dir = os.path.join(self.output_dir, folder_ext)
 		os.makedirs(output_dir, exist_ok=True)
 		output_filename = f'Y{audio_id}_{start_time}_{end_time}.m4a'
 
@@ -60,35 +78,12 @@ class DownloadAudioSet:
 			print(e)
 			return ''
 
-	# Trim audio based on start time and duration of audio. 
-	def trim_audio(
-		self, input_path: str, audio_id: str,
-		start_seconds: Union[str, int, float], end_seconds: Union[str, int, float],
-		folder_ext: str = 'audio_formatted_and_segmented_downloads',
-		) -> str:
-
-		start_seconds = int(float(start_seconds))
-		end_seconds = int(float(end_seconds))
-		duration = end_seconds - start_seconds
-
-		output_dir = self.output_dir + '_' + folder_ext
-		os.makedirs(output_dir, exist_ok=True)
-
-		ext = os.path.splitext(input_path)[1]
-		output_filename = f'Y{audio_id}_{str(start_seconds)}_{str(end_seconds)}{ext}'
-		output_path = os.path.join(output_dir, output_filename)
-
-		command = f'ffmpeg -loglevel panic -i {input_path} -ss {int(start_seconds)} -t {duration} -c copy -y {output_path}'
-		subprocess.run(command.split())
-
-		return output_path
-	
 	# Format audio - 16 bit Signed PCM audio sampled at 44.1kHz
 	def format_audio(
-		self, input_path: str, output_ext: str = '.wav', folder_ext: str = 'audio_formatted_and_segmented_downloads',
+		self, input_path: str, output_ext: str = '.wav', folder_ext: str = 'processed',
 		) -> str:
 
-		output_dir = f'{self.output_dir}_{folder_ext}'
+		output_dir = os.path.join(self.output_dir, folder_ext)
 		os.makedirs(output_dir, exist_ok=True)
 
 		output_path = os.path.join(output_dir, os.path.basename(input_path))
@@ -107,35 +102,47 @@ class DownloadAudioSet:
 		return output_path
 
 	def download_and_process_audio(
-		self, audio_id: str, 
-		start_seconds: Union[str, int, float], end_seconds: Union[str, int, float], 
+		self, audio_id: str,
+		start_seconds: Union[str, int, float], end_seconds: Union[str, int, float], labels: str,
 		remove_downloads: bool = False
 		) -> int:
 
+		start_seconds = int(float(start_seconds))
+		end_seconds = int(float(end_seconds))
+
 		downloaded_path = self.download_audio(audio_id, start_seconds, end_seconds)
 		if downloaded_path == '':
-			return 0
+			return ''
 		
-		# trimmed_path = self.trim_audio(downloaded_path, audio_id, start_seconds, end_seconds)
 		output_path = self.format_audio(downloaded_path)
 		
 		if remove_downloads:
 			os.remove(downloaded_path)
-		return 1
+
+		# generate manifest requirements
+		duration = end_seconds - start_seconds
+		relpath = os.path.relpath(output_path, self.output_dir)
+		labels = labels.strip('\n')
+		labels = labels.replace('"', '')
+		labels = labels.split(',')
+
+		self.update_manifest(relpath, duration, labels)
+
+		return output_path
 
 	def mp_download_and_process_audio(self, args):
 		self.download_and_process_audio(*args)
 
 	def download_dataset(
-		self, input_csv_path: str, num_threads: int = 1,
+		self, num_threads: int = 1,
 		) -> str:
 
-		with open(input_csv_path, mode='r', encoding='utf-8') as f:
+		with open(self.csv_filepath, mode='r', encoding='utf-8') as f:
 			lines = f.readlines()
 			# ignore first 3 commented lines
 			lines = lines[3:]
 
-		queries = [line.split(', ')[:3] for line in lines]
+		queries = [line.split(', ') for line in lines]
 
 		if num_threads > 1:
 			P = Pool(num_threads)
@@ -147,6 +154,8 @@ class DownloadAudioSet:
 			for idx, query in tqdm(enumerate(queries)):
 				self.download_and_process_audio(*query)
 
+
 if __name__ == '__main__':
-	download_obj = DownloadAudioSet(output_dir=sys.argv[1])
-	download_obj.download_dataset(sys.argv[2], int(sys.argv[3]))
+	# output_dir: str, csv_filepath: str, 
+	download_obj = DownloadAudioSet(output_dir=sys.argv[1], csv_filepath=sys.argv[2])
+	download_obj.download_dataset(num_threads=int(sys.argv[3]))
