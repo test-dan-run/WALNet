@@ -1,13 +1,11 @@
-from typing import List
-
 import torch
 import torch.nn as nn
 from sklearn import metrics
 from torch.optim import Adam
-from omegaconf import DictConfig
-from torch.optim.lr_scheduler import ReduceLROnPlateau, CyclicLR
-
 import pytorch_lightning as pl
+from omegaconf import DictConfig
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CyclicLR, StepLR
+
 
 from src.classifier import WALNet
 
@@ -61,8 +59,6 @@ class LightningWALNet(pl.LightningModule):
 
         y_true = torch.cat(labels_list).cpu().numpy()
         y_pred = torch.cat(preds_list).cpu().numpy()
-        print(y_true.shape)
-        print(y_pred.shape)
 
         val_ap = metrics.average_precision_score(y_true, y_pred)
         try:
@@ -122,6 +118,12 @@ class LightningWALNet(pl.LightningModule):
                 max_lr = self.optim_cfg.max_lr,
                 epoch_size_up = self.optim_cfg.epoch_size_up,
                 epoch_size_down = self.optim_cfg.epoch_size_down
+            )
+        elif self.optim_cfg.scheduler == 'step':
+            scheduler = StepLR(
+                optimizer = optim,
+                step_size = self.optim_cfg.step_size,
+                gamma = self.optim_cfg.gamma
             )
 
         return {

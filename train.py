@@ -41,6 +41,7 @@ def main(cfg: DictConfig):
         callbacks=[checkpoint,], 
         logger=logger, 
         max_epochs=cfg.run.epochs, 
+        accumulate_grad_batches=cfg.run.accumulate_grad_batches,
         strategy=DDPPlugin(find_unused_parameters=False) if cfg.run.num_gpus > 1 else None)
 
     # train

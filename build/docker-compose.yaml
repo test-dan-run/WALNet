@@ -12,7 +12,8 @@ services:
           devices:
             - capabilities: [gpu]
     volumes:
-      - /mnt/c/Users/tjinghua/projects/WALNet:/walnet:z
+      - /mnt/c/projects/detection/WALNet:/walnet:z
+      - /mnt/d/datasets/detection/audioset-2022-07-21:/dataset
     ulimits:
       memlock: -1
       stack: 67108864

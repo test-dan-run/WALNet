@@ -1,5 +1,5 @@
-train_manifest_path: /walnet/downloads/audioset/outputs/balanced_train_segments/manifest.json
-valid_manifest_path: /walnet/downloads/audioset/outputs/eval_segments/manifest.json
+train_manifest_path: /dataset/balanced_train_segments/manifest.json
+valid_manifest_path: /dataset/eval_segments/manifest.json
 test_manifest_path: null
 
 labels_indices_path: /walnet/downloads/audioset/class_labels_indices.txt

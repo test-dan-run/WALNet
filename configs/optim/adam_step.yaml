@@ -1,0 +1,6 @@
+optim: adam
+scheduler: step
+lr: 0.001
+step_size: 10
+gamma: 0.87
+interval: epoch
