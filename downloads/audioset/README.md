@@ -4,7 +4,7 @@ Steps to download the AudioSet dataset.
 
 ## 1. Download the CSV files for dataset splits 
 
-**NOTE**: For your convenience the csv files and label file can already be found in this repository, in the `downloads/audioset` folder. However, you may proceed with the steps below if there are any updates to the dataset.
+**NOTE**: For your convenience the csv files and label file can already be found in this repository, in the `downloads/audioset` folder. However, you may proceed with the step below if there are any updates to the dataset, or you want to download the full train_segments dataset.
 
 
 The splits can be found on the official site [here](https://research.google.com/audioset/download.html). The CSV files are in the following format:
@@ -42,7 +42,7 @@ This command will create 3 distinct items:
 2. `processed` directory (where the formatted audio files are placed)
 3. `manifest.json` (which will be used as input for the torch dataloaders later on)
 
-The `manifest.json` file will have the following structure. It closely resembles [NVIDIA NeMo](https://github.com/nvidia/nemo)'s manifest format.
+The `manifest.json` file will have the following structure. It closely resembles [NVIDIA NeMo](https://docs.nvidia.com/deeplearning/nemo/user-guide/docs/en/stable/asr/datasets.html#librispeech)'s manifest format.
 ```python
 # {'audio_filepath': <rel. path to audio file>, 'duration': <duration(s)>, 'labels': [label1, label2, ...]}
 {"audio_filepath": "processed/Y--i-y1v8Hy8_0_9.wav", "duration": 9, "labels": ["/m/04rlf", "/m/09x0r", "/t/dd00004", "/t/dd00005"]}
