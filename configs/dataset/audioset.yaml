@@ -1,3 +1,5 @@
+name: audioset
+
 train_manifest_path: /dataset/balanced_train_segments/manifest.json
 valid_manifest_path: /dataset/eval_segments/manifest.json
 test_manifest_path: null

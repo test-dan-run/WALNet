@@ -1,0 +1,16 @@
+hydra:
+  run:
+    dir: '.'
+
+defaults:
+  - dataset: audioset
+  - model: walnet_base
+  - optim: adam_step
+  - run: 1xGPU
+
+clearml:
+  base_docker_image: dleongsh/torchaudio:1.8.1-cuda11.1-cudnn8-runtime
+  project_name: audio_classification
+  task_name: ${dataset.name}_${model.name}
+  output_uri: s3://experiment-logging/storage
+  queue_name: compute
